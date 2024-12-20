@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Penjualan 2022 - 2024</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+            background: linear-gradient(120deg, #8e44ad, #3498db);
+            color: #fff;
+            transition: background 0.5s, color 0.5s;
+        }
+        h1, h2 {
+            margin: 10px 0;
+        }
+        canvas {
+            margin: 20px auto;
+            display: block;
+            max-width: 100%;
+            height: 400px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+        .buttons, .filters {
+            margin: 20px 0;
+        }
+        button, select {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .dark-mode-btn {
+            background: #fff;
+            color: #000;
+        }
+        .chart-btn {
+            background: #2ecc71;
+            color: #fff;
+        }
+        footer {
+            margin-top: 30px;
+            font-size: 14px;
+        }
+        .dark-mode {
+            background: #2c3e50;
+            color: #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Laporan Penjualan 2022 - 2024</h1>
+    <h2>Bulan Januari - Desember</h2>
+    <div class="filters">
+        <label for="yearFilter">Pilih Tahun:</label>
+        <select id="yearFilter" onchange="filterDataByYear()">
+            <option value="all">Semua Tahun</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+        </select>
+    </div>
+    <div class="buttons">
+        <button class="chart-btn" onclick="changeChartType()">Ubah Jenis Grafik</button>
+        <button class="chart-btn" onclick="updateData()">Muat Data Baru</button>
+        <button class="chart-btn" onclick="exportChart()">Unduh Grafik</button>
+        <button class="dark-mode-btn" onclick="toggleDarkMode()">Toggle Mode Gelap</button>
+    </div>
+    <div>
+        <canvas id="salesChart"></canvas>
+    </div>
+    <footer>&copy; 2024 Laporan Penjualan - All Rights Reserved</footer>
+    
+    <script>
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        let currentChartType = 'bar';
+
+        const data2022 = [4017, 6135, 7091, 5841, 5036, 4547, 3467, 3970, 6313, 3595, 9207, 5945];
+        const data2023 = [2416, 4136, 7935, 8004, 9505, 5026, 6108, 6343, 9404, 9280, 9287, 8689];
+        const data2024 = [5000, 7200, 8100, 8900, 9400, 7600, 7200, 8100, 8900, 9500, 10200, 11000];
+
+        const chartConfig = {
+            type: currentChartType,
+            data: {
+                labels: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+                datasets: [
+                    {
+                        label: 'Penjualan 2022',
+                        data: data2022,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Penjualan 2023',
+                        data: data2023,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Penjualan 2024',
+                        data: data2024,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Rp ${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Bulan' } },
+                    y: { title: { display: true, text: 'Penjualan (Rupiah)' } }
+                }
+            }
+        };
+
+        let salesChart = new Chart(ctx, chartConfig);
+
+        function changeChartType() {
+            currentChartType = currentChartType === 'bar' ? 'line' : 'bar';
+            salesChart.destroy();
+            chartConfig.type = currentChartType;
+            salesChart = new Chart(ctx, chartConfig);
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function updateData() {
+            salesChart.data.datasets.forEach(dataset => {
+                dataset.data = dataset.data.map(value => value + Math.floor(Math.random() * 1000 - 500));
+            });
+            salesChart.update();
+        }
+
+        function filterDataByYear() {
+            const year = document.getElementById('yearFilter').value;
+            salesChart.data.datasets.forEach(dataset => {
+                dataset.hidden = year !== 'all' && dataset.label.includes(year) === false;
+            });
+            salesChart.update();
+        }
+
+        function exportChart() {
+            const link = document.createElement('a');
+            link.href = salesChart.toBase64Image();
+            link.download = 'laporan_penjualan.png';
+            link.click();
+        }
+    </script>
+</body>
+</html>
